@@ -201,6 +201,13 @@ textarea.input { resize: vertical; min-height: 90px; }
 }
 
 .place-card {
+  /* Renders as an <a> (react-router Link), which defaults to display:inline — and
+     width/min-width/max-width are ignored on inline elements. It also isn't itself a
+     flex/grid item (its parent is a plain wrapper div), so it never gets auto-blockified
+     either. Without this, card width silently falls back to shrink-to-fit-content, which
+     is why cards in a row with more siblings rendered visibly narrower than a row with
+     fewer siblings instead of all being the same fixed size. */
+  display: block;
   /* Fluid width: scales with the viewport between a comfortable floor and the
      original 178px ceiling, instead of staying pixel-locked on every screen. */
   width: clamp(148px, 42vw, 178px);
