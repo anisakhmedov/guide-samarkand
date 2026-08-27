@@ -24,6 +24,7 @@ import { ReviewDiscountPage } from './pages/options/ReviewDiscountPage';
 import { ProblemPage } from './pages/options/ProblemPage';
 import { WeatherPage } from './pages/options/WeatherPage';
 import { ExtensionPage } from './pages/options/ExtensionPage';
+import { NotificationsPage } from './pages/NotificationsPage';
 
 function AppShell({ children }: { children: React.ReactNode }) {
   return (
@@ -76,6 +77,7 @@ function GatedApp() {
             <Route path="/options/problem" element={<ProblemPage />} />
             <Route path="/options/weather" element={<WeatherPage />} />
             <Route path="/options/extension" element={<ExtensionPage />} />
+            <Route path="/notifications" element={<NotificationsPage />} />
           </Routes>
         </motion.div>
       </AnimatePresence>

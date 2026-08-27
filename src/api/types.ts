@@ -70,6 +70,7 @@ export interface ServiceRequest {
   type: ServiceRequestType;
   status: ServiceRequestStatus;
   payload: Record<string, unknown>;
+  seenByGuest: boolean;
   createdAt: string;
 }
 
@@ -83,4 +84,9 @@ export interface WeatherDay {
 export interface WeatherInfo {
   current: { temp: number; label: string };
   daily: WeatherDay[];
+}
+
+export interface NotificationsSummary {
+  unreadChat: number;
+  unseenRequests: number;
 }

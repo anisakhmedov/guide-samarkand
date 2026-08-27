@@ -1,7 +1,10 @@
+import { useEffect, useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Home, MapPin, Compass, MessageCircle, SlidersHorizontal } from 'lucide-react';
+import { Home, MapPin, Compass, MessageCircle, SlidersHorizontal, Bell } from 'lucide-react';
 import { useLang } from '../context/LangContext';
+import { api } from '../api/client';
+import { NotificationsSummary } from '../api/types';
 
 const items = [
   { to: '/', Icon: Home, key: 'nav.home' },
@@ -11,9 +14,25 @@ const items = [
   { to: '/options', Icon: SlidersHorizontal, key: 'nav.options' },
 ];
 
+const POLL_MS = 15000;
+
 export function BottomNav() {
   const { t } = useLang();
   const { pathname } = useLocation();
+  const [unread, setUnread] = useState(0);
+
+  useEffect(() => {
+    const load = () =>
+      api
+        .get<NotificationsSummary>('/notifications')
+        .then((s) => setUnread(s.unreadChat + s.unseenRequests))
+        .catch(() => {});
+    load();
+    const id = setInterval(load, POLL_MS);
+    return () => clearInterval(id);
+  }, []);
+
+  const bellActive = pathname.startsWith('/notifications');
 
   return (
     <nav className="bottom-nav">
@@ -46,6 +65,12 @@ export function BottomNav() {
           </NavLink>
         );
       })}
+
+      <div className="bottom-nav__divider" />
+      <NavLink to="/notifications" className={`bottom-nav__bell${bellActive ? ' active' : ''}`} aria-label={t('nav.notifications')}>
+        <Bell />
+        {unread > 0 && <span className="bottom-nav__bell-badge">{unread > 9 ? '9+' : unread}</span>}
+      </NavLink>
     </nav>
   );
 }

@@ -388,6 +388,43 @@ textarea.input { resize: vertical; min-height: 90px; }
 .bottom-nav a svg { width: 20px; height: 20px; stroke-width: 2.2; }
 .bottom-nav a.active { color: var(--color-primary-dark); }
 
+/* Notifications: an icon-only bell appended after the labeled tabs (not a 6th equal
+   label like the others) — "Уведомления" at 0.66rem would overflow/wrap on narrow
+   phones, exactly the kind of overflow the mobile pass just fixed elsewhere. */
+.bottom-nav__divider { width: 1px; height: 24px; background: var(--color-border); margin: 0 2px; flex-shrink: 0; }
+.bottom-nav__bell {
+  position: relative;
+  flex: 0 0 auto;
+  width: 42px;
+  height: calc(var(--nav-height) - 12px);
+  margin: 6px 2px;
+  border-radius: var(--radius-pill);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-soft);
+  transition: background 0.18s ease, color 0.18s ease;
+}
+.bottom-nav__bell svg { width: 20px; height: 20px; stroke-width: 2.2; }
+.bottom-nav__bell.active { color: var(--color-primary-dark); background: var(--color-primary-light); }
+.bottom-nav__bell-badge {
+  position: absolute;
+  top: 3px;
+  right: 5px;
+  min-width: 15px;
+  height: 15px;
+  padding: 0 3px;
+  border-radius: 999px;
+  background: var(--color-danger);
+  color: #fff;
+  font-size: 0.58rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.92);
+}
+
 /* ---------- hero ---------- */
 
 .top-hero {
@@ -890,3 +927,29 @@ textarea.input { resize: vertical; min-height: 90px; }
 .weather-day-card__icon { margin: 8px 0; color: var(--color-gold); }
 .weather-day-card__temps { font-size: 0.8rem; font-weight: 700; }
 .weather-day-card__temps .min { color: var(--color-text-muted); font-weight: 600; }
+
+.notif-item { display: flex; align-items: center; gap: 12px; padding: 14px; margin-bottom: 10px; position: relative; }
+.notif-item__icon {
+  width: 40px; height: 40px;
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.notif-item__body { flex: 1; min-width: 0; }
+.notif-item__title { font-weight: 700; font-size: 0.9rem; margin-bottom: 2px; }
+.notif-item__preview {
+  font-size: 0.82rem;
+  color: var(--color-text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.notif-item__time { font-size: 0.72rem; color: var(--color-text-soft); flex-shrink: 0; white-space: nowrap; }
+.notif-item__dot {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--color-danger);
+}
