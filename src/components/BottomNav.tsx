@@ -1,10 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Home, MapPin, Compass, MessageCircle, SlidersHorizontal, Bell } from 'lucide-react';
 import { useLang } from '../context/LangContext';
 import { api } from '../api/client';
 import { NotificationsSummary } from '../api/types';
+import { notifyBrowser, requestNotificationPermission } from '../notify';
 
 const items = [
   { to: '/', Icon: Home, key: 'nav.home' },
@@ -20,12 +21,29 @@ export function BottomNav() {
   const { t } = useLang();
   const { pathname } = useLocation();
   const [unread, setUnread] = useState(0);
+  const prevRef = useRef<NotificationsSummary | null>(null);
+  const tRef = useRef(t);
+  tRef.current = t;
 
   useEffect(() => {
+    requestNotificationPermission();
+
     const load = () =>
       api
         .get<NotificationsSummary>('/notifications')
-        .then((s) => setUnread(s.unreadChat + s.unseenRequests))
+        .then((s) => {
+          setUnread(s.unreadChat + s.unseenRequests);
+          const prev = prevRef.current;
+          if (prev) {
+            if (s.unreadChat > prev.unreadChat) {
+              notifyBrowser(tRef.current('notifications.chatTitle'), tRef.current('notifications.newChatBody'));
+            }
+            if (s.unseenRequests > prev.unseenRequests) {
+              notifyBrowser(tRef.current('notifications.title'), tRef.current('notifications.newRequestBody'));
+            }
+          }
+          prevRef.current = s;
+        })
         .catch(() => {});
     load();
     const id = setInterval(load, POLL_MS);
