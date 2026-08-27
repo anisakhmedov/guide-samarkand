@@ -49,3 +49,38 @@ export interface ChatMessage {
   readStatus: boolean;
   timestamp: string;
 }
+
+export type MenuItemType = 'food' | 'drink';
+
+export interface MenuItem {
+  _id: string;
+  type: MenuItemType;
+  name: string;
+  description: string;
+  price: number;
+  discountedPrice: number;
+  photo: string;
+}
+
+export type ServiceRequestType = 'food_order' | 'drink_order' | 'wake_up' | 'cleaning' | 'problem' | 'extension';
+export type ServiceRequestStatus = 'new' | 'in_progress' | 'done' | 'rejected';
+
+export interface ServiceRequest {
+  _id: string;
+  type: ServiceRequestType;
+  status: ServiceRequestStatus;
+  payload: Record<string, unknown>;
+  createdAt: string;
+}
+
+export interface WeatherDay {
+  date: string;
+  min: number;
+  max: number;
+  label: string;
+}
+
+export interface WeatherInfo {
+  current: { temp: number; label: string };
+  daily: WeatherDay[];
+}

@@ -15,6 +15,15 @@ import { RoutePlayerPage } from './pages/RoutePlayerPage';
 import { ChatPage } from './pages/ChatPage';
 import { ProfilePage } from './pages/ProfilePage';
 import { HistoryPage } from './pages/HistoryPage';
+import { OptionsPage } from './pages/options/OptionsPage';
+import { FoodOrderPage } from './pages/options/FoodOrderPage';
+import { DrinksOrderPage } from './pages/options/DrinksOrderPage';
+import { WakeUpPage } from './pages/options/WakeUpPage';
+import { CleaningPage } from './pages/options/CleaningPage';
+import { ReviewDiscountPage } from './pages/options/ReviewDiscountPage';
+import { ProblemPage } from './pages/options/ProblemPage';
+import { WeatherPage } from './pages/options/WeatherPage';
+import { ExtensionPage } from './pages/options/ExtensionPage';
 
 function AppShell({ children }: { children: React.ReactNode }) {
   return (
@@ -58,6 +67,15 @@ function GatedApp() {
             <Route path="/guide/route/:id/play" element={<RoutePlayerPage />} />
             <Route path="/chat" element={<ChatPage />} />
             <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/options" element={<OptionsPage />} />
+            <Route path="/options/food" element={<FoodOrderPage />} />
+            <Route path="/options/drinks" element={<DrinksOrderPage />} />
+            <Route path="/options/wake-up" element={<WakeUpPage />} />
+            <Route path="/options/cleaning" element={<CleaningPage />} />
+            <Route path="/options/review" element={<ReviewDiscountPage />} />
+            <Route path="/options/problem" element={<ProblemPage />} />
+            <Route path="/options/weather" element={<WeatherPage />} />
+            <Route path="/options/extension" element={<ExtensionPage />} />
           </Routes>
         </motion.div>
       </AnimatePresence>

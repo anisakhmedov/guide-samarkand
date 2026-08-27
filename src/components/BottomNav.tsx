@@ -1,6 +1,6 @@
 import { NavLink, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Home, MapPin, Compass, MessageCircle } from 'lucide-react';
+import { Home, MapPin, Compass, MessageCircle, SlidersHorizontal } from 'lucide-react';
 import { useLang } from '../context/LangContext';
 
 const items = [
@@ -8,6 +8,7 @@ const items = [
   { to: '/map', Icon: MapPin, key: 'nav.map' },
   { to: '/guide', Icon: Compass, key: 'nav.guide' },
   { to: '/chat', Icon: MessageCircle, key: 'nav.chat' },
+  { to: '/options', Icon: SlidersHorizontal, key: 'nav.options' },
 ];
 
 export function BottomNav() {

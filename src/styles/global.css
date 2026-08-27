@@ -784,3 +784,49 @@ textarea.input { resize: vertical; min-height: 90px; }
   display: flex; align-items: center; justify-content: space-between; gap: 12px;
   margin-top: 14px;
 }
+
+/* ---------- options (room-service, wake-up, cleaning, review discount, problem, weather, extension) ---------- */
+
+.options-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+.option-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px 14px;
+  text-align: left;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.option-tile:active { transform: scale(0.97); }
+.option-tile__icon {
+  width: 42px; height: 42px;
+  border-radius: 13px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.option-tile__label { font-weight: 700; font-size: 0.86rem; line-height: 1.25; }
+
+.qty-stepper { display: flex; align-items: center; gap: 10px; }
+.qty-stepper button {
+  width: 30px; height: 30px;
+  border-radius: 50%;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700;
+  color: var(--color-primary-dark);
+}
+.qty-stepper button:disabled { opacity: 0.4; }
+.qty-stepper span { min-width: 18px; text-align: center; font-weight: 700; }
+
+.menu-item-row { display: flex; align-items: center; gap: 12px; padding: 14px; margin-bottom: 10px; }
+.menu-item-row__body { flex: 1; }
+.menu-item-row__price { display: flex; align-items: baseline; gap: 8px; margin-top: 4px; }
+.price-old { text-decoration: line-through; color: var(--color-text-soft); font-size: 0.8rem; }
+.price-new { font-weight: 800; color: var(--color-primary-dark); }
+
+.weather-day-card { padding: 14px; text-align: center; flex-shrink: 0; width: 92px; }
+.weather-day-card__date { font-size: 0.72rem; color: var(--color-text-muted); font-weight: 700; text-transform: uppercase; }
+.weather-day-card__icon { margin: 8px 0; color: var(--color-gold); }
+.weather-day-card__temps { font-size: 0.8rem; font-weight: 700; }
+.weather-day-card__temps .min { color: var(--color-text-muted); font-weight: 600; }

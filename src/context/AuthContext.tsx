@@ -8,6 +8,7 @@ export interface GuestMe {
   statusResidence: 'pending' | 'approved' | 'rejected';
   statusReview: 'not_sent' | 'pending' | 'approved';
   accessStatus: 'open' | 'closed';
+  discountStatus: 'none' | 'pending' | 'approved';
 }
 
 interface AuthContextValue {
@@ -17,6 +18,7 @@ interface AuthContextValue {
   enterGate: (name: string, roomNumber: string) => Promise<void>;
   refresh: () => Promise<void>;
   markReviewSubmitted: () => Promise<void>;
+  submitDiscountReview: () => Promise<void>;
   logout: () => void;
 }
 
@@ -34,8 +36,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return;
     }
     try {
-      const me = await api.get<GuestMe>('/guest/me');
+      const [me, links] = await Promise.all([
+        api.get<GuestMe>('/guest/me'),
+        api.get<AuthContextValue['reviewLinks']>('/auth/guest/review-links').catch(() => null),
+      ]);
       setGuest(me);
+      setReviewLinks(links);
     } catch {
       clearToken();
       setGuest(null);
@@ -63,13 +69,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setGuest(updated);
   }, []);
 
+  const submitDiscountReview = useCallback(async () => {
+    const updated = await api.patch<GuestMe>('/guest/me/discount-submitted');
+    setGuest(updated);
+  }, []);
+
   const logout = useCallback(() => {
     clearToken();
     setGuest(null);
   }, []);
 
   return (
-    <AuthContext.Provider value={{ guest, loading, reviewLinks, enterGate, refresh, markReviewSubmitted, logout }}>
+    <AuthContext.Provider
+      value={{ guest, loading, reviewLinks, enterGate, refresh, markReviewSubmitted, submitDiscountReview, logout }}
+    >
       {children}
     </AuthContext.Provider>
   );
