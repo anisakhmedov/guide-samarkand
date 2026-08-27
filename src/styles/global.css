@@ -388,42 +388,6 @@ textarea.input { resize: vertical; min-height: 90px; }
 .bottom-nav a svg { width: 20px; height: 20px; stroke-width: 2.2; }
 .bottom-nav a.active { color: var(--color-primary-dark); }
 
-/* Notifications: an icon-only bell appended after the labeled tabs (not a 6th equal
-   label like the others) — "Уведомления" at 0.66rem would overflow/wrap on narrow
-   phones, exactly the kind of overflow the mobile pass just fixed elsewhere. */
-.bottom-nav__divider { width: 1px; height: 24px; background: var(--color-border); margin: 0 2px; flex-shrink: 0; }
-.bottom-nav__bell {
-  position: relative;
-  flex: 0 0 auto;
-  width: 42px;
-  height: calc(var(--nav-height) - 12px);
-  margin: 6px 2px;
-  border-radius: var(--radius-pill);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--color-text-soft);
-  transition: background 0.18s ease, color 0.18s ease;
-}
-.bottom-nav__bell svg { width: 20px; height: 20px; stroke-width: 2.2; }
-.bottom-nav__bell.active { color: var(--color-primary-dark); background: var(--color-primary-light); }
-.bottom-nav__bell-badge {
-  position: absolute;
-  top: 3px;
-  right: 5px;
-  min-width: 15px;
-  height: 15px;
-  padding: 0 3px;
-  border-radius: 999px;
-  background: var(--color-danger);
-  color: #fff;
-  font-size: 0.58rem;
-  font-weight: 800;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.92);
-}
 
 /* ---------- hero ---------- */
 
@@ -883,6 +847,7 @@ textarea.input { resize: vertical; min-height: 90px; }
   gap: 12px;
   padding: 16px 14px;
   text-align: left;
+  position: relative;
   transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 .option-tile:active { transform: scale(0.97); }
@@ -952,4 +917,61 @@ textarea.input { resize: vertical; min-height: 90px; }
   width: 8px; height: 8px;
   border-radius: 50%;
   background: var(--color-danger);
+}
+
+/* ---------- request card (Options "Мои заявки" + Notifications) ---------- */
+
+.request-card { padding: 14px; margin-bottom: 10px; position: relative; }
+.request-card__head { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.request-card__icon {
+  width: 34px; height: 34px;
+  border-radius: 11px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.request-card__title { font-weight: 700; font-size: 0.9rem; flex: 1; }
+.request-card__details { font-size: 0.85rem; color: var(--color-text-muted); line-height: 1.55; }
+.request-card__details strong { color: var(--color-text); font-weight: 700; }
+.request-card__comment {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  background: var(--color-primary-light);
+  color: var(--color-primary-dark);
+  font-size: 0.85rem;
+  line-height: 1.4;
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+}
+.request-card__time { font-size: 0.72rem; color: var(--color-text-soft); margin-top: 10px; }
+
+/* ---------- options tile badge (Options grid: Chat/Notifications unread counts) ---------- */
+
+.option-tile__badge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: var(--color-danger);
+  color: #fff;
+  font-size: 0.66rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.bottom-nav a.has-dot { position: relative; }
+.bottom-nav__tab-dot {
+  position: absolute;
+  top: 2px;
+  right: 6px;
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--color-danger);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.92);
 }

@@ -70,6 +70,7 @@ export interface ServiceRequest {
   type: ServiceRequestType;
   status: ServiceRequestStatus;
   payload: Record<string, unknown>;
+  adminComment: string;
   seenByGuest: boolean;
   createdAt: string;
 }
