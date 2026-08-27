@@ -2,8 +2,8 @@ import { Fragment, FormEvent, ReactNode, useEffect, useState } from 'react';
 import { Clock3, Compass, Lock, PenLine, RotateCw, Search, TriangleAlert } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useLang } from '../context/LangContext';
-import { LANGS, Lang } from '../i18n/dictionaries';
 import { ApiError } from '../api/client';
+import { LangSwitcher } from './LangSwitcher';
 
 // Implements PLAN.md "Полный флоу доступа (двухэтапный гейт)": name+room -> wait for
 // residence approval -> leave a review -> wait for review check -> admin opens access.
@@ -51,11 +51,7 @@ export function GateFlow({ children }: { children: ReactNode }) {
     return (
       <div className="center-screen brand">
         <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 28 }}>
-          <div className="lang-switcher">
-            {LANGS.map((l) => (
-              <LangPillLight key={l.code} code={l.code} label={l.label} />
-            ))}
-          </div>
+          <LangSwitcher />
         </div>
 
         <Compass size={38} strokeWidth={1.8} style={{ margin: '0 auto 14px', opacity: 0.92 }} />
@@ -197,14 +193,5 @@ function ProgressSteps({ step }: { step: number }) {
         </Fragment>
       ))}
     </div>
-  );
-}
-
-function LangPillLight({ code, label }: { code: Lang; label: string }) {
-  const { lang, setLang } = useLang();
-  return (
-    <button className={lang === code ? 'active' : ''} onClick={() => setLang(code)}>
-      {label}
-    </button>
   );
 }

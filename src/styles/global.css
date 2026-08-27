@@ -60,6 +60,10 @@ body {
   font-family: var(--font);
   -webkit-tap-highlight-color: transparent;
   -webkit-font-smoothing: antialiased;
+  /* Belt-and-suspenders against any element that slips past the viewport width
+     (long unbroken strings, a stray fixed size, etc.) forcing an unwanted horizontal
+     scrollbar/pan on mobile. */
+  overflow-x: hidden;
 }
 
 a { color: inherit; text-decoration: none; }
@@ -74,6 +78,12 @@ input, textarea, select { font-family: inherit; }
   max-width: 480px;
   margin: 0 auto;
   min-height: 100vh;
+  /* Mobile browsers resize the *visual* viewport as their address bar/toolbar
+     collapses on scroll — 100vh alone is the tallest case, so on first paint (toolbar
+     still visible) the shell can be taller than what's actually visible and force a
+     phantom scroll. 100dvh tracks the real, current viewport instead. Browsers that
+     don't understand dvh discard this whole line and keep the vh value above. */
+  min-height: 100dvh;
   background: var(--color-bg);
   padding-bottom: calc(var(--nav-height) + 20px + env(safe-area-inset-bottom, 0px));
   position: relative;
@@ -87,6 +97,7 @@ input, textarea, select { font-family: inherit; }
   .app-shell {
     margin: 24px auto;
     min-height: calc(100vh - 48px);
+    min-height: calc(100dvh - 48px);
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-lg);
     overflow: hidden;
@@ -452,6 +463,7 @@ textarea.input { resize: vertical; min-height: 90px; }
 
 .center-screen {
   min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -644,7 +656,13 @@ textarea.input { resize: vertical; min-height: 90px; }
 
 /* ---------- chat ---------- */
 
-.chat-wrap { display: flex; flex-direction: column; height: calc(100vh - var(--nav-footprint)); background: var(--color-bg-soft); }
+.chat-wrap {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - var(--nav-footprint));
+  height: calc(100dvh - var(--nav-footprint));
+  background: var(--color-bg-soft);
+}
 .chat-header {
   padding: 16px 18px;
   background: var(--color-surface);
@@ -688,18 +706,41 @@ textarea.input { resize: vertical; min-height: 90px; }
 
 /* ---------- language switcher ---------- */
 
-.lang-switcher { display: flex; gap: 4px; background: rgba(255,255,255,0.14); border-radius: var(--radius-pill); padding: 3px; }
-.lang-switcher button {
+.lang-switcher {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.14);
+  border-radius: var(--radius-pill);
+  flex-shrink: 0;
+}
+.lang-switcher select {
+  appearance: none;
+  -webkit-appearance: none;
   border: none;
   background: transparent;
-  color: rgba(255,255,255,0.85);
+  color: #fff;
   border-radius: var(--radius-pill);
-  padding: 5px 10px;
-  font-size: 0.7rem;
+  padding: 6px 26px 6px 12px;
+  /* Kept at 1rem/16px on purpose (matches .input) — anything smaller makes iOS Safari
+     zoom the whole page in when the control is focused/tapped. */
+  font-size: 1rem;
   font-weight: 700;
+  font-family: inherit;
   cursor: pointer;
 }
-.lang-switcher button.active { background: #fff; color: var(--color-primary-dark); }
+.lang-switcher select:focus { outline: none; box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.45); }
+/* Native <option> list always renders with the platform's own (light) styling regardless
+   of the trigger's color, so give options readable dark text there. */
+.lang-switcher option { color: var(--color-text); background: var(--color-surface); }
+.lang-switcher svg {
+  position: absolute;
+  right: 9px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: rgba(255, 255, 255, 0.85);
+  pointer-events: none;
+}
 
 /* ---------- misc ---------- */
 
