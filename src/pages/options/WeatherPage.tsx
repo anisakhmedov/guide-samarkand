@@ -13,6 +13,7 @@ import {
 import { api } from '../../api/client';
 import { WeatherInfo } from '../../api/types';
 import { useLang } from '../../context/LangContext';
+import { PageHeader } from '../../components/PageHeader';
 
 const WEATHER_ICONS: Record<string, LucideIcon> = {
   clear: Sun,
@@ -39,8 +40,8 @@ export function WeatherPage() {
   const CurrentIcon = weather ? WEATHER_ICONS[weather.current.label] || Cloud : Cloud;
 
   return (
-    <div className="page">
-      <h1>{t('options.weather')}</h1>
+    <div className="page page--narrow">
+      <PageHeader title={t('options.weather')} />
       <p>{t('options.weather.subtitle')}</p>
 
       {!weather && <p className="muted">{t('common.loading')}</p>}

@@ -4,6 +4,7 @@ import { motion, type Variants } from 'framer-motion';
 import {
   UtensilsCrossed,
   GlassWater,
+  Flame,
   AlarmClock,
   Sparkles,
   PenLine,
@@ -13,15 +14,21 @@ import {
   MessageCircle,
   Bell,
   ClipboardList,
+  ChevronRight,
 } from 'lucide-react';
 import { api } from '../../api/client';
-import { NotificationsSummary, ServiceRequest } from '../../api/types';
+import { ServiceRequest } from '../../api/types';
+import { useNotifications } from '../../context/NotificationsContext';
 import { RequestCard } from '../../components/RequestCard';
 import { useLang } from '../../context/LangContext';
+import { useAuth } from '../../context/AuthContext';
+import { initialsOf } from '../../utils/initials';
+import { reviewState, useDiscountPercent } from '../../hooks/useReviewOffer';
 
 const TILES = [
   { to: '/options/food', Icon: UtensilsCrossed, key: 'options.foodOrder', bg: 'var(--color-accent-light)', fg: 'var(--color-accent-dark)' },
   { to: '/options/drinks', Icon: GlassWater, key: 'options.drinksOrder', bg: 'var(--color-gold-light)', fg: 'var(--color-gold-dark)' },
+  { to: '/options/hookah', Icon: Flame, key: 'options.hookah', bg: 'var(--color-accent-light)', fg: 'var(--color-accent)' },
   { to: '/options/wake-up', Icon: AlarmClock, key: 'options.wakeUp', bg: 'var(--color-purple-light)', fg: 'var(--color-purple-dark)' },
   { to: '/options/cleaning', Icon: Sparkles, key: 'options.cleaning', bg: 'var(--color-success-light)', fg: 'var(--color-success)' },
   { to: '/options/review', Icon: PenLine, key: 'options.review', bg: 'var(--color-pink-light)', fg: 'var(--color-pink-dark)' },
@@ -38,11 +45,13 @@ const itemVariants: Variants = {
 
 export function OptionsPage() {
   const { t } = useLang();
-  const [summary, setSummary] = useState<NotificationsSummary>({ unreadChat: 0, unseenRequests: 0 });
+  const { guest } = useAuth();
+  const percent = useDiscountPercent();
+  const showReviewOffer = !!percent && reviewState(guest) === 'not_sent';
+  const { summary } = useNotifications();
   const [requests, setRequests] = useState<ServiceRequest[] | null>(null);
 
   useEffect(() => {
-    api.get<NotificationsSummary>('/notifications').then(setSummary).catch(() => {});
     api
       .get<ServiceRequest[]>('/service-requests/mine')
       .then((list) => setRequests(list.slice().sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt))))
@@ -52,6 +61,21 @@ export function OptionsPage() {
   return (
     <motion.div className="page" variants={listVariants} initial="initial" animate="animate">
       <h1>{t('options.title')}</h1>
+
+      {guest && (
+        <motion.div variants={itemVariants}>
+          <Link to="/profile" className="card profile-link">
+            <span className="avatar-circle sm">{initialsOf(guest.name)}</span>
+            <span className="profile-link__text">
+              <span className="profile-link__name">{guest.name}</span>
+              <span className="profile-link__sub">
+                {t('profile.room')} {guest.roomNumber} · {t('profile.open')}
+              </span>
+            </span>
+            <ChevronRight size={20} />
+          </Link>
+        </motion.div>
+      )}
 
       <div className="options-grid">
         <motion.div variants={itemVariants}>
@@ -79,6 +103,7 @@ export function OptionsPage() {
                 <Icon size={21} />
               </span>
               <span className="option-tile__label">{t(key)}</span>
+              {to === '/options/review' && showReviewOffer && <span className="option-tile__offer">−{percent}%</span>}
             </Link>
           </motion.div>
         ))}
@@ -92,9 +117,11 @@ export function OptionsPage() {
         </h2>
         {requests === null && <p className="muted">{t('common.loading')}</p>}
         {requests !== null && requests.length === 0 && <p className="muted">{t('options.myRequests.empty')}</p>}
-        {requests?.map((r) => (
-          <RequestCard key={r._id} request={r} />
-        ))}
+        <div className="request-grid">
+          {requests?.map((r) => (
+            <RequestCard key={r._id} request={r} />
+          ))}
+        </div>
       </motion.section>
     </motion.div>
   );

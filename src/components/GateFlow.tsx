@@ -1,19 +1,35 @@
-import { Fragment, FormEvent, ReactNode, useEffect, useState } from 'react';
-import { Clock3, Compass, Lock, PenLine, RotateCw, Search, TriangleAlert } from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
+import { FormEvent, ReactNode, useEffect, useState } from 'react';
+import { Check, Clock3, Compass, Lock, Phone, RotateCw, TriangleAlert } from 'lucide-react';
+import { ContactChannel, useAuth } from '../context/AuthContext';
 import { useLang } from '../context/LangContext';
 import { ApiError } from '../api/client';
 import { LangSwitcher } from './LangSwitcher';
+import { GateSteps, ProfileStep, RulesStep } from './gate/RegistrationSteps';
 
-// Implements PLAN.md "Полный флоу доступа (двухэтапный гейт)": name+room -> wait for
-// residence approval -> leave a review -> wait for review check -> admin opens access.
+// Messengers offered on the registration form. WhatsApp/Viber reach the guest through the
+// phone number itself, so they don't get a username field (keeps the form one screen tall).
+const CHANNELS: { type: ContactChannel; label: string; color: string; phoneBased?: boolean; at?: boolean }[] = [
+  { type: 'telegram', label: 'Telegram', color: '#2AABEE', at: true },
+  { type: 'whatsapp', label: 'WhatsApp', color: '#25D366', phoneBased: true },
+  { type: 'instagram', label: 'Instagram', color: '#E1306C', at: true },
+  { type: 'wechat', label: 'WeChat', color: '#09B83E' },
+  { type: 'viber', label: 'Viber', color: '#7360F2', phoneBased: true },
+  { type: 'other', label: '', color: '#9A8C78' },
+];
+
+// Registration gate: name+room+phone -> country + date of birth -> sign the house rules ->
+// wait for the stay to be confirmed (confirming opens access). The hotel review is no longer a
+// gate step — the app asks for it on a later visit (see ReviewPrompt).
 // accessStatus is checked first since an admin can open/close it independently at any time.
 export function GateFlow({ children }: { children: ReactNode }) {
-  const { guest, loading, reviewLinks, enterGate, refresh, markReviewSubmitted } = useAuth();
+  const { guest, loading, enterGate, refresh, logout } = useAuth();
   const { t } = useLang();
 
   const [name, setName] = useState('');
   const [room, setRoom] = useState('');
+  const [phone, setPhone] = useState('');
+  const [channels, setChannels] = useState<ContactChannel[]>([]);
+  const [handles, setHandles] = useState<Partial<Record<ContactChannel, string>>>({});
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
 
@@ -38,9 +54,22 @@ export function GateFlow({ children }: { children: ReactNode }) {
     const onSubmit = async (e: FormEvent) => {
       e.preventDefault();
       setError('');
+      if (!/^\+?[0-9\s\-()]{7,20}$/.test(phone.trim())) {
+        setError(t('gate.phoneInvalid'));
+        return;
+      }
+      if (channels.length === 0) {
+        setError(t('gate.contactsRequired'));
+        return;
+      }
       setSubmitting(true);
       try {
-        await enterGate(name, room);
+        await enterGate({
+          name,
+          roomNumber: room,
+          phone: phone.trim(),
+          contacts: channels.map((type) => ({ type, value: (handles[type] ?? '').trim() })),
+        });
       } catch (err) {
         setError(err instanceof ApiError ? err.message : t('common.error'));
       } finally {
@@ -48,27 +77,107 @@ export function GateFlow({ children }: { children: ReactNode }) {
       }
     };
 
+    const toggleChannel = (type: ContactChannel) =>
+      setChannels((prev) => (prev.includes(type) ? prev.filter((c) => c !== type) : [...prev, type]));
+
+    const withHandle = CHANNELS.filter((c) => channels.includes(c.type) && !c.phoneBased);
+
     return (
-      <div className="center-screen brand">
-        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 28 }}>
+      <div className="gate-screen">
+        <header className="gate-head">
+          <div className="gate-head__logo">
+            <Compass size={22} strokeWidth={2} />
+          </div>
+          <div className="gate-head__text">
+            <h1>{t('gate.title')}</h1>
+            <p>{t('gate.subtitle')}</p>
+          </div>
           <LangSwitcher />
-        </div>
+        </header>
+        <GateSteps current={1} />
 
-        <Compass size={38} strokeWidth={1.8} style={{ margin: '0 auto 14px', opacity: 0.92 }} />
-        <h1 style={{ fontSize: '1.6rem' }}>{t('gate.title')}</h1>
-        <p style={{ marginBottom: 26 }}>{t('gate.subtitle')}</p>
+        <form onSubmit={onSubmit} className="gate-form">
+          <div className="gate-row">
+            <label className="gate-field">
+              <span>{t('gate.name')}</span>
+              <input
+                className="gate-input"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                autoComplete="name"
+                required
+                minLength={2}
+              />
+            </label>
+            <label className="gate-field gate-field--room">
+              <span>{t('gate.room')}</span>
+              <input className="gate-input" value={room} onChange={(e) => setRoom(e.target.value)} inputMode="numeric" required />
+            </label>
+          </div>
 
-        <form onSubmit={onSubmit} className="gate-card">
-          <div className="field">
-            <label>{t('gate.name')}</label>
-            <input className="input" value={name} onChange={(e) => setName(e.target.value)} required minLength={2} />
+          <label className="gate-field">
+            <span>{t('gate.phone')}</span>
+            <div className="gate-input-wrap">
+              <Phone size={16} />
+              <input
+                className="gate-input"
+                type="tel"
+                inputMode="tel"
+                autoComplete="tel"
+                placeholder="+998 90 123 45 67"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                required
+              />
+            </div>
+          </label>
+
+          <div className="gate-field">
+            <span>
+              {t('gate.contacts')} <em>· {t('gate.contactsHint')}</em>
+            </span>
+            <div className="gate-channels">
+              {CHANNELS.map((c) => {
+                const on = channels.includes(c.type);
+                return (
+                  <button
+                    key={c.type}
+                    type="button"
+                    className={`gate-channel ${on ? 'on' : ''}`}
+                    style={{ ['--ch' as string]: c.color }}
+                    onClick={() => toggleChannel(c.type)}
+                    aria-pressed={on}
+                  >
+                    <i>{on ? <Check size={9} strokeWidth={4} /> : null}</i>
+                    {c.label || t('gate.contactOther')}
+                  </button>
+                );
+              })}
+            </div>
           </div>
-          <div className="field" style={{ marginBottom: 8 }}>
-            <label>{t('gate.room')}</label>
-            <input className="input" value={room} onChange={(e) => setRoom(e.target.value)} required />
-          </div>
-          {error && <div className="error-text">{error}</div>}
-          <button className="btn block" disabled={submitting} type="submit" style={{ marginTop: 14 }}>
+
+          {withHandle.map((c) => (
+            <div key={c.type} className="gate-input-wrap gate-handle" style={{ ['--ch' as string]: c.color }}>
+              <b>{c.type === 'other' ? t('gate.contactOther') : c.label}</b>
+              {c.at && <small>@</small>}
+              <input
+                className="gate-input"
+                value={handles[c.type] ?? ''}
+                onChange={(e) => setHandles((prev) => ({ ...prev, [c.type]: e.target.value }))}
+                required
+                autoCapitalize="none"
+                autoCorrect="off"
+                placeholder={c.type === 'other' ? t('gate.contactOtherPlaceholder') : t('gate.contactUsername')}
+              />
+            </div>
+          ))}
+
+          {channels.some((type) => CHANNELS.find((c) => c.type === type)?.phoneBased) && (
+            <div className="gate-note">{t('gate.contactPhoneBased')}</div>
+          )}
+
+          {error && <div className="error-text gate-error">{error}</div>}
+          <button className="btn block gate-submit" disabled={submitting} type="submit">
             {t('gate.submit')}
           </button>
         </form>
@@ -76,13 +185,28 @@ export function GateFlow({ children }: { children: ReactNode }) {
     );
   }
 
+  // Registration steps 2–3 come before everything else, including for guests registered
+  // before these steps existed — every guest has to sign the house rules once.
+  if (!guest.country || !guest.birthDate) return <ProfileStep />;
+  if (!guest.rulesAcceptedAt) return <RulesStep />;
+
   if (guest.accessStatus === 'open') {
     return <>{children}</>;
   }
 
   if (guest.statusResidence === 'pending') {
     return (
-      <StatusScreen icon={<Clock3 />} title={t('gate.pending.title')} text={t('gate.pending.text')} onRefresh={refresh} step={0} />
+      <StatusScreen
+        icon={<Clock3 />}
+        title={t('gate.pending.title')}
+        text={t('gate.pending.text')}
+        onRefresh={refresh}
+        footer={
+          <button type="button" className="gate-restart" onClick={logout}>
+            {t('gate.restart')}
+          </button>
+        }
+      />
     );
   }
 
@@ -90,50 +214,8 @@ export function GateFlow({ children }: { children: ReactNode }) {
     return <StatusScreen icon={<TriangleAlert />} tone="danger" title={t('gate.rejected.title')} text={t('gate.rejected.text')} />;
   }
 
-  if (guest.statusReview === 'not_sent') {
-    return (
-      <div className="center-screen brand">
-        <div className="status-icon-badge" style={{ background: 'rgba(255,255,255,0.16)', color: '#fff' }}>
-          <PenLine />
-        </div>
-        <h1>{t('gate.review.title')}</h1>
-        <p>{t('gate.review.text')}</p>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 16 }}>
-          {reviewLinks?.google && (
-            <a className="btn secondary" href={reviewLinks.google} target="_blank" rel="noreferrer" style={{ background: '#fff' }}>
-              Google Maps
-            </a>
-          )}
-          {reviewLinks?.yandex && (
-            <a className="btn secondary" href={reviewLinks.yandex} target="_blank" rel="noreferrer" style={{ background: '#fff' }}>
-              Яндекс.Карты
-            </a>
-          )}
-          {reviewLinks?.twoGis && (
-            <a className="btn secondary" href={reviewLinks.twoGis} target="_blank" rel="noreferrer" style={{ background: '#fff' }}>
-              2ГИС
-            </a>
-          )}
-        </div>
-        <button
-          className="btn block"
-          style={{ marginTop: 18, background: '#fff', color: 'var(--color-primary-dark)', boxShadow: 'none' }}
-          onClick={() => markReviewSubmitted()}
-        >
-          {t('gate.review.submit')}
-        </button>
-        <ProgressSteps step={1} />
-      </div>
-    );
-  }
-
-  if (guest.statusReview === 'pending') {
-    return (
-      <StatusScreen icon={<Search />} title={t('gate.reviewPending.title')} text={t('gate.reviewPending.text')} onRefresh={refresh} step={1} />
-    );
-  }
-
-  return <StatusScreen icon={<Lock />} title={t('gate.accessClosed.title')} text={t('gate.accessClosed.text')} onRefresh={refresh} step={2} />;
+  // Stay confirmed but access closed by staff.
+  return <StatusScreen icon={<Lock />} title={t('gate.accessClosed.title')} text={t('gate.accessClosed.text')} onRefresh={refresh} />;
 }
 
 function StatusScreen({
@@ -141,16 +223,17 @@ function StatusScreen({
   title,
   text,
   onRefresh,
-  step,
   tone = 'brand',
+  footer,
 }: {
   icon: ReactNode;
   title: string;
   text: string;
   onRefresh?: () => void;
-  step?: number;
   tone?: 'brand' | 'danger';
+  footer?: ReactNode;
 }) {
+  const { t } = useLang();
   if (tone === 'danger') {
     return (
       <div className="center-screen">
@@ -174,24 +257,10 @@ function StatusScreen({
           style={{ marginTop: 16, alignSelf: 'center', background: 'rgba(255,255,255,0.14)', color: '#fff', border: '1px solid rgba(255,255,255,0.3)' }}
           onClick={onRefresh}
         >
-          <RotateCw size={16} /> Обновить
+          <RotateCw size={16} /> {t('gate.refresh')}
         </button>
       )}
-      {step !== undefined && <ProgressSteps step={step} />}
-    </div>
-  );
-}
-
-function ProgressSteps({ step }: { step: number }) {
-  const dots = [0, 1, 2];
-  return (
-    <div className="progress-steps">
-      {dots.map((i, idx) => (
-        <Fragment key={i}>
-          <div className={`progress-steps__dot ${i === step ? 'active' : i < step ? 'done' : ''}`} />
-          {idx < dots.length - 1 && <div className={`progress-steps__line ${i < step ? 'done' : ''}`} />}
-        </Fragment>
-      ))}
+      {footer}
     </div>
   );
 }

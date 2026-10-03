@@ -1,20 +1,16 @@
-import { Route, Routes, useLocation } from 'react-router-dom';
+import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import { AnimatePresence, motion, type Variants } from 'framer-motion';
 import { AuthProvider } from './context/AuthContext';
 import { LangProvider } from './context/LangContext';
+import { ThemeProvider } from './context/ThemeContext';
+import { NotificationsProvider } from './context/NotificationsContext';
+import { ReviewPrompt } from './components/ReviewPrompt';
 import { GateFlow } from './components/GateFlow';
 import { BottomNav } from './components/BottomNav';
 
-import { HomePage } from './pages/HomePage';
-import { PlacePage } from './pages/PlacePage';
-import { MapPage } from './pages/MapPage';
-import { GuidePage } from './pages/GuidePage';
-import { BuildRoutePage } from './pages/BuildRoutePage';
-import { RouteDetailPage } from './pages/RouteDetailPage';
-import { RoutePlayerPage } from './pages/RoutePlayerPage';
 import { ChatPage } from './pages/ChatPage';
+import { ComingSoonPage } from './pages/ComingSoonPage';
 import { ProfilePage } from './pages/ProfilePage';
-import { HistoryPage } from './pages/HistoryPage';
 import { OptionsPage } from './pages/options/OptionsPage';
 import { FoodOrderPage } from './pages/options/FoodOrderPage';
 import { DrinksOrderPage } from './pages/options/DrinksOrderPage';
@@ -24,13 +20,20 @@ import { ReviewDiscountPage } from './pages/options/ReviewDiscountPage';
 import { ProblemPage } from './pages/options/ProblemPage';
 import { WeatherPage } from './pages/options/WeatherPage';
 import { ExtensionPage } from './pages/options/ExtensionPage';
+import { HookahPage } from './pages/options/HookahPage';
 import { NotificationsPage } from './pages/NotificationsPage';
 
+// Chat is a full-screen conversation (Telegram-style) with its own back button, so the
+// floating tab bar would only cover the composer there.
+const FULL_SCREEN_PATHS = ['/chat'];
+
 function AppShell({ children }: { children: React.ReactNode }) {
+  const { pathname } = useLocation();
+  const fullScreen = FULL_SCREEN_PATHS.includes(pathname);
   return (
-    <div className="app-shell">
+    <div className={`app-shell ${fullScreen ? 'app-shell--full' : ''}`}>
       {children}
-      <BottomNav />
+      {!fullScreen && <BottomNav />}
     </div>
   );
 }
@@ -47,52 +50,60 @@ const pageVariants: Variants = {
 function GatedApp() {
   const location = useLocation();
   return (
-    <AppShell>
-      <AnimatePresence mode="wait" initial={false}>
-        <motion.div
-          key={location.pathname}
-          variants={pageVariants}
-          initial="initial"
-          animate="animate"
-          exit="exit"
-          transition={{ duration: 0.26, ease: [0.22, 1, 0.36, 1] }}
-        >
-          <Routes location={location}>
-            <Route path="/" element={<HomePage />} />
-            <Route path="/place/:id" element={<PlacePage />} />
-            <Route path="/history" element={<HistoryPage />} />
-            <Route path="/map" element={<MapPage />} />
-            <Route path="/guide" element={<GuidePage />} />
-            <Route path="/guide/build" element={<BuildRoutePage />} />
-            <Route path="/guide/route/:id" element={<RouteDetailPage />} />
-            <Route path="/guide/route/:id/play" element={<RoutePlayerPage />} />
-            <Route path="/chat" element={<ChatPage />} />
-            <Route path="/profile" element={<ProfilePage />} />
-            <Route path="/options" element={<OptionsPage />} />
-            <Route path="/options/food" element={<FoodOrderPage />} />
-            <Route path="/options/drinks" element={<DrinksOrderPage />} />
-            <Route path="/options/wake-up" element={<WakeUpPage />} />
-            <Route path="/options/cleaning" element={<CleaningPage />} />
-            <Route path="/options/review" element={<ReviewDiscountPage />} />
-            <Route path="/options/problem" element={<ProblemPage />} />
-            <Route path="/options/weather" element={<WeatherPage />} />
-            <Route path="/options/extension" element={<ExtensionPage />} />
-            <Route path="/notifications" element={<NotificationsPage />} />
-          </Routes>
-        </motion.div>
-      </AnimatePresence>
-    </AppShell>
+    <NotificationsProvider>
+      <AppShell>
+        <AnimatePresence mode="wait" initial={false}>
+          <motion.div
+            key={location.pathname}
+            variants={pageVariants}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+            transition={{ duration: 0.26, ease: [0.22, 1, 0.36, 1] }}
+          >
+            <Routes location={location}>
+              {/* Options hub is the landing page for now; Home/Map/Guide are "coming soon".
+                  The original pages (HomePage, MapPage, GuidePage, PlacePage, …) are kept in
+                  src/pages — swap the routes back when those sections launch. */}
+              <Route path="/" element={<OptionsPage />} />
+              <Route path="/home" element={<ComingSoonPage section="home" />} />
+              <Route path="/place/:id" element={<ComingSoonPage section="home" />} />
+              <Route path="/history" element={<ComingSoonPage section="home" />} />
+              <Route path="/map" element={<ComingSoonPage section="map" />} />
+              <Route path="/guide/*" element={<ComingSoonPage section="guide" />} />
+              <Route path="/chat" element={<ChatPage />} />
+              <Route path="/profile" element={<ProfilePage />} />
+              <Route path="/options" element={<Navigate to="/" replace />} />
+              <Route path="/options/food" element={<FoodOrderPage />} />
+              <Route path="/options/drinks" element={<DrinksOrderPage />} />
+              <Route path="/options/hookah" element={<HookahPage />} />
+              <Route path="/options/wake-up" element={<WakeUpPage />} />
+              <Route path="/options/cleaning" element={<CleaningPage />} />
+              <Route path="/options/review" element={<ReviewDiscountPage />} />
+              <Route path="/options/problem" element={<ProblemPage />} />
+              <Route path="/options/weather" element={<WeatherPage />} />
+              <Route path="/options/extension" element={<ExtensionPage />} />
+              <Route path="/notifications" element={<NotificationsPage />} />
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </motion.div>
+        </AnimatePresence>
+      </AppShell>
+      <ReviewPrompt />
+    </NotificationsProvider>
   );
 }
 
 export default function App() {
   return (
-    <LangProvider>
-      <AuthProvider>
-        <GateFlow>
-          <GatedApp />
-        </GateFlow>
-      </AuthProvider>
-    </LangProvider>
+    <ThemeProvider>
+      <LangProvider>
+        <AuthProvider>
+          <GateFlow>
+            <GatedApp />
+          </GateFlow>
+        </AuthProvider>
+      </LangProvider>
+    </ThemeProvider>
   );
 }

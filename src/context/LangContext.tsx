@@ -1,4 +1,4 @@
-import { createContext, ReactNode, useContext, useMemo, useState } from 'react';
+import { createContext, ReactNode, useContext, useEffect, useMemo, useState } from 'react';
 import { dictionaries, Lang } from '../i18n/dictionaries';
 
 const STORAGE_KEY = 'guide_lang';
@@ -18,6 +18,10 @@ export function LangProvider({ children }: { children: ReactNode }) {
     localStorage.setItem(STORAGE_KEY, l);
     setLangState(l);
   };
+
+  useEffect(() => {
+    document.documentElement.lang = lang;
+  }, [lang]);
 
   const t = useMemo(() => {
     const dict = dictionaries[lang];

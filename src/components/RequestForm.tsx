@@ -3,6 +3,7 @@ import { CheckCircle2 } from 'lucide-react';
 import { api } from '../api/client';
 import { useLang } from '../context/LangContext';
 import { ServiceRequestType } from '../api/types';
+import { PageHeader } from './PageHeader';
 
 interface RequestFormProps {
   type: ServiceRequestType;
@@ -34,8 +35,8 @@ export function RequestForm({ type, title, subtitle, payload, disabled, children
 
   if (sent) {
     return (
-      <div className="page">
-        <h1>{title}</h1>
+      <div className="page page--narrow">
+        <PageHeader title={title} />
         <div className="card" style={{ padding: 18, display: 'flex', alignItems: 'center', gap: 12 }}>
           <CheckCircle2 size={22} color="var(--color-success)" />
           <span>{t('options.form.sent')}</span>
@@ -55,8 +56,8 @@ export function RequestForm({ type, title, subtitle, payload, disabled, children
   }
 
   return (
-    <div className="page">
-      <h1>{title}</h1>
+    <div className="page page--narrow">
+      <PageHeader title={title} />
       {subtitle && <p>{subtitle}</p>}
       {children}
       <button className="btn block" style={{ marginTop: 10 }} disabled={submitting || disabled} onClick={submit}>

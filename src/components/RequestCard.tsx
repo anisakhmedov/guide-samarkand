@@ -10,7 +10,10 @@ const TYPE_LABEL_KEY: Record<ServiceRequestType, string> = {
   cleaning: 'options.cleaning',
   problem: 'options.problem',
   extension: 'options.extension',
+  hookah: 'options.hookah',
 };
+
+const PAID_TYPES: ServiceRequestType[] = ['food_order', 'drink_order', 'hookah'];
 
 const STATUS_ICON: Record<string, LucideIcon> = {
   new: Clock3,
@@ -46,13 +49,29 @@ export function RequestCard({ request }: { request: ServiceRequest }) {
           <StatusIcon size={17} />
         </span>
         <span className="request-card__title">{t(TYPE_LABEL_KEY[request.type])}</span>
-        <span className={`badge ${badgeClass}`}>{t(`requestStatus.${request.status}`)}</span>
+        <span className="request-card__badges">
+          <span className={`badge ${badgeClass}`}>{t(`requestStatus.${request.status}`)}</span>
+          {request.paid !== undefined && PAID_TYPES.includes(request.type) && request.status !== 'rejected' && (
+            <span className={`badge ${request.paid ? 'success' : 'gold'}`}>{t(request.paid ? 'requestDetail.paid' : 'requestDetail.unpaid')}</span>
+          )}
+        </span>
         {!request.seenByGuest && <span className="notif-item__dot" style={{ top: -2, right: -2 }} />}
       </div>
 
       <div className="request-card__details">
         {(request.type === 'food_order' || request.type === 'drink_order') && (
-          <RequestItemsDetail items={(p.items as { name: string; qty: number; price: number }[]) || []} />
+          <RequestItemsDetail items={(p.items as { name: string; qty: number; price: number }[]) || []} total={request.total} />
+        )}
+        {request.type === 'hookah' && (
+          <>
+            <RequestItemsDetail items={[{ name: t('options.hookah'), qty: Number(p.qty) || 1, price: Number(p.price) || 0 }]} total={request.total} />
+            {!!p.time && (
+              <div>
+                <strong>{t('requestDetail.time')}:</strong> {p.time as string}
+              </div>
+            )}
+            {!!p.note && <div>{p.note as string}</div>}
+          </>
         )}
         {(request.type === 'wake_up' || request.type === 'cleaning') && (
           <>
@@ -106,10 +125,10 @@ export function RequestCard({ request }: { request: ServiceRequest }) {
   );
 }
 
-function RequestItemsDetail({ items }: { items: { name: string; qty: number; price: number }[] }) {
+function RequestItemsDetail({ items, total: serverTotal }: { items: { name: string; qty: number; price: number }[]; total?: number }) {
   const { t } = useLang();
   if (items.length === 0) return null;
-  const total = items.reduce((sum, it) => sum + it.price * it.qty, 0);
+  const total = serverTotal || items.reduce((sum, it) => sum + it.price * it.qty, 0);
   return (
     <>
       {items.map((it, i) => (

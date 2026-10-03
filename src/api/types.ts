@@ -62,7 +62,7 @@ export interface MenuItem {
   photo: string;
 }
 
-export type ServiceRequestType = 'food_order' | 'drink_order' | 'wake_up' | 'cleaning' | 'problem' | 'extension';
+export type ServiceRequestType = 'food_order' | 'drink_order' | 'wake_up' | 'cleaning' | 'problem' | 'extension' | 'hookah';
 export type ServiceRequestStatus = 'new' | 'in_progress' | 'done' | 'rejected';
 
 export interface ServiceRequest {
@@ -70,9 +70,12 @@ export interface ServiceRequest {
   type: ServiceRequestType;
   status: ServiceRequestStatus;
   payload: Record<string, unknown>;
+  total?: number;
+  paid?: boolean;
   adminComment: string;
   seenByGuest: boolean;
   createdAt: string;
+  updatedAt?: string;
 }
 
 export interface WeatherDay {
@@ -91,3 +94,10 @@ export interface NotificationsSummary {
   unreadChat: number;
   unseenRequests: number;
 }
+
+export interface HookahInfo {
+  price: number;
+  available: boolean;
+}
+
+export type PaymentMethod = 'cash' | 'card';
